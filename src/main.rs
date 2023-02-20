@@ -1,3 +1,6 @@
+use server::Server;
+use http::request::Request;
+
 fn main() {
     let addr = String::from("127.0.0.1:8080").to_string();
     let server = Server::new(addr);
@@ -5,37 +8,45 @@ fn main() {
 }
 
 mod server { 
-    struct Server {
+    pub struct Server {
         addr: String,
     }
     
     impl Server {
-        fn new(addr: String) -> Self {
+        pub fn new(addr: String) -> Self {
             Self {
                 addr
             }
         }
     
-        fn run(self) {
+        pub fn run(self) {
             println!("Connection: {}", self.addr);
         }
     }
 }
 
-struct Request {
-    path: String,
-    query_string: Option<String>, 
-    method: Method
-}
+mod http {
+    pub mod request {
+        use super::method::Method;
 
-enum Method {
-    GET,
-    POST,
-    DELTE,
-    PUT,
-    PATCH,
-    HEAD,
-    CONNECT,
-    OPTIONS,
-    TRACE,
+        pub struct Request {
+            path: String,
+            query_string: Option<String>, 
+            method: Method
+        }
+    }
+
+    mod method { 
+        pub enum Method {
+            GET,
+            POST,
+            DELTE,
+            PUT,
+            PATCH,
+            HEAD,
+            CONNECT,
+            OPTIONS,
+            TRACE,
+        }
+    }
 }
