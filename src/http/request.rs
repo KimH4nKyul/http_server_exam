@@ -21,7 +21,7 @@ impl TryFrom<&[u8]> for Request {
     // type Error = String; 
     type Error = ParseError;
 
-    // GET /search?name=abc&sort=1 HTTP/1.1
+    // GET /search?name=abc&sort=1 HTTP/1.1\r\n...HEADERS...
     fn try_from(buf: &[u8]) -> Result<Self, Self::Error> {
         /*
         str::from_utf8(buf)
@@ -46,8 +46,26 @@ impl TryFrom<&[u8]> for Request {
         // let request = str::from_utf8(buf).or(Err(ParseError::InvalidEncoding))?;
         let request = str::from_utf8(buf)?;
 
+        // 여기서 로컬 변수 request를 재사용하고 있기 때문에 shadowing이 발생한다. 이제 이전의 request 는 사용할 수 없다.
+        let (method, request) = get_next_word(request).ok_or(ParseError::InvalidRequest)?;
+        let (path, request) = get_next_word(request).ok_or(ParseError::InvalidRequest)?;
+        let (protocol, _) = get_next_word(request).ok_or(ParseError::InvalidRequest)?;
+
+        if protocol != "HTTP/1.1" {
+            return Err(ParseError::InvalidProtocol);
+        }
+
         unimplemented!()
     }   
+}
+
+fn get_next_word(request: &str) -> Option<(&str, &str)> {
+    for (i, c) in request.chars().enumerate() {
+        if c == ' ' || c == '\r' {
+            return Some((&request[..i], &request[i+1..]));
+        }
+    }
+    None
 }
 
 pub enum ParseError {
