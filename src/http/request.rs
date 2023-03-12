@@ -48,7 +48,7 @@ impl TryFrom<&[u8]> for Request {
 
         // 여기서 로컬 변수 request를 재사용하고 있기 때문에 shadowing이 발생한다. 이제 이전의 request 는 사용할 수 없다.
         let (method, request) = get_next_word(request).ok_or(ParseError::InvalidRequest)?;
-        let (path, request) = get_next_word(request).ok_or(ParseError::InvalidRequest)?;
+        let (mut path, request) = get_next_word(request).ok_or(ParseError::InvalidRequest)?;
         let (protocol, _) = get_next_word(request).ok_or(ParseError::InvalidRequest)?;
 
         if protocol != "HTTP/1.1" {
@@ -56,8 +56,36 @@ impl TryFrom<&[u8]> for Request {
         }
 
         let method: Method = method.parse()?;
+        let mut query_string= None;
 
-        unimplemented!()
+        // pattern 1.
+        // match path.find('?') {
+        //     Some(i) => {
+        //         query_string = Some(&path[i+1 ..]);
+        //         path = &path[..i];
+        //     }
+        //     None => {}
+        // }
+
+        // pattern 2.
+        // let q = path.find('?');
+        // if q.is_some() {
+        //     let i = q.unwrap();
+        //     query_string = Some(&path[i+1 ..]);
+        //     path = &path[..i];
+        // }
+
+        // pattern 3.
+        if let Some(i) = path.find('?') {
+            query_string = Some(path[i+1 ..].to_string());
+            path = &path[..i];
+        }
+
+        Ok(Self {
+            path: path.to_string(), 
+            query_string, 
+            method
+        }) 
     }   
 }
 
